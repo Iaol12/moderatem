@@ -11,6 +11,7 @@ const {
 } = require("./questions");
 const { authenticate } = require("./auth");
 
+const port = process.env.PORT || 4000 
 const app = express();
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server });
@@ -110,6 +111,6 @@ app.use((req, res, next) => {
   res.sendFile(path.join(__dirname, '../frontend/build', 'index.html'));
 });
 
-server.listen(5002, () => {
+server.listen(port, () => {
   console.log("Server listening on http://localhost:5002");
 });
