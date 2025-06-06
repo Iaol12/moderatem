@@ -1,18 +1,8 @@
 import { useState } from 'react';
 import useWebSocket from '../hooks/useWebSocket';
 
-// Helper to merge server questions and pending questions
-function mergeQuestions(serverQuestions, localQuestions) {
-  // Remove pending questions that are now approved (by text)
-  const approvedTexts = serverQuestions.map(q => q.text);
-  const pending = localQuestions.filter(q => q.pending && !approvedTexts.includes(q.text));
-  // Merge, server questions first, then pending
-  return [...serverQuestions, ...pending];
-}
-
 export default function Submit() {
   const [questions, setQuestions] = useState([]);
-  const [localPending, setLocalPending] = useState([]); // for temp questions
   const [text, setText] = useState('');
 
   // Store the initial order of questions by id
@@ -20,35 +10,13 @@ export default function Submit() {
 
   const send = useWebSocket((msg) => {
     if (msg.type === 'approved') {
-      setQuestions(prevQuestions => mergeQuestions(msg.data, localPending));
-      setOrder(prevOrder => {
-        const newIds = msg.data.map(q => q.id);
-        const approvedTexts = msg.data.map(q => q.text);
-        // Remove pending ids that have been approved (by matching text)
-        const filteredOrder = prevOrder.filter(id => {
-          const q = questions.find(q => q.id === id) || localPending.find(q => q.id === id);
-          return !q || !q.pending || !approvedTexts.includes(q.text);
-        });
-        // Add new ids from server
-        return [...filteredOrder, ...newIds.filter(id => !filteredOrder.includes(id))];
-      });
-      // Remove approved from localPending
-      setLocalPending(pending => pending.filter(q => !msg.data.some(sq => sq.text === q.text)));
+      setQuestions(msg.data);
+      setOrder(msg.data.map(q => q.id));
     }
   }, 'submit');
 
   const handleSubmit = () => {
     if (text.trim()) {
-      const tempId = 'pending-' + Date.now();
-      const newQuestion = {
-        id: tempId,
-        text: text.trim(),
-        likes: 0,
-        pending: true,
-      };
-      setLocalPending(qs => [...qs, newQuestion]);
-      setQuestions(qs => [...qs, newQuestion]);
-      setOrder(ord => [...ord, tempId]);
       send('submit-question', { text });
     }
     setText('');
@@ -81,6 +49,7 @@ export default function Submit() {
         maxWidth: 520,
         margin: '0 auto',
         minHeight: '100vh',
+        height: '100vh', // ensure full viewport height
         background: 'linear-gradient(135deg, #181a1b 0%, #23272a 100%)',
         fontFamily: 'Inter, Fira Mono, Arial, sans-serif',
         color: '#f5f6fa',
@@ -89,7 +58,9 @@ export default function Submit() {
         boxShadow: '0 0 32px #0008',
         position: 'relative',
         padding: 0,
-        alignItems: 'center', // center children horizontally
+        alignItems: 'center',
+        boxSizing: 'border-box',
+        overflow: 'hidden', // prevent double scrollbars
       }}
     >
       <h1
@@ -118,6 +89,7 @@ export default function Submit() {
           boxShadow: '0 2px 16px #0004',
           border: '1px solid #23272a',
           minHeight: 0,
+          boxSizing: 'border-box',
         }}
       >
         {orderedQuestions.map(q => (
@@ -206,6 +178,7 @@ export default function Submit() {
           zIndex: 10,
           marginTop: 'auto', // push to bottom
           alignSelf: 'center', // center horizontally
+          boxSizing: 'border-box',
         }}
       >
         <input
@@ -251,16 +224,26 @@ export default function Submit() {
       </div>
       {/* Responsive styles for mobile */}
       <style>{`
+        html, body {
+          box-sizing: border-box;
+          margin: 0;
+          padding: 0;
+          width: 100vw;
+          overflow-x: hidden;
+        }
         @media (max-width: 600px) {
           div[style*='max-width: 520px'] {
             max-width: 100vw !important;
+            width: 100vw !important;
             padding: 0 !important;
             box-shadow: none !important;
+            border-radius: 0 !important;
           }
           ul[style*='border-radius: 12px'] {
             border-radius: 8px !important;
             font-size: 0.98rem !important;
             max-height: none !important;
+            width: 100vw !important;
           }
           h1 {
             font-size: 1.3rem !important;
@@ -275,6 +258,7 @@ export default function Submit() {
             max-width: 100vw !important;
             left: 0 !important;
             position: static !important;
+            box-sizing: border-box !important;
           }
           input[placeholder='Vaša otázka...'] {
             font-size: 1rem !important;
