@@ -176,9 +176,13 @@ export default function Submit() {
           padding: '1.1rem 1rem',
           border: '1px solid #23272a',
           zIndex: 10,
-          marginTop: 'auto', // push to bottom
-          alignSelf: 'center', // center horizontally
+          alignSelf: 'center',
           boxSizing: 'border-box',
+          position: 'fixed',
+          left: 0,
+          right: 0,
+          bottom: '0vh', // 10% of viewport height from bottom
+          margin: '0 auto',
         }}
       >
         <input
