@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import useWebSocket from '../hooks/useWebSocket';
+import { QRCodeSVG } from 'qrcode.react';
+
 
 export default function Display() {
   const [questions, setQuestions] = useState([]);
@@ -31,38 +33,57 @@ export default function Display() {
         }, 10);
       }
     });
-  }, [questions]);
+  }, [questions, prevOrder]);
+
+  // Get the current origin (protocol + host)
+  const appUrl = window.location.origin + '/submit';
 
   return (
-    <div style={{ maxWidth: 900, margin: '0 auto', padding: '2rem', minHeight: '100vh', background: '#181a1b', color: '#fff', fontFamily: 'Fira Mono, monospace' }}>
-      <h1 style={{ textAlign: 'center', fontSize: '2.5rem', marginBottom: '2rem', letterSpacing: 2 }}>Otázky z publika</h1>
-      <ul ref={listRef} style={{ listStyle: 'none', padding: 0, margin: 0, width: '100%' }}>
-        {questions.map(q => (
-          <li
-            key={q.id}
-            data-id={q.id}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              fontSize: '2rem',
-              background: '#23272a',
-              borderRadius: '10px',
-              marginBottom: '1.5rem',
-              padding: '1.5rem 2rem',
-              boxShadow: '0 4px 24px #0002',
-              minHeight: 80,
-              transition: 'background 0.3s',
-            }}
-          >
-            <span style={{ flex: 1, wordBreak: 'break-word', color: '#fff' }}>{q.text}</span>
-            <span style={{ display: 'flex', alignItems: 'center', marginLeft: '2rem', fontWeight: 700 }}>
-              <span style={{ fontSize: '2.2rem', color: '#ffb300', marginRight: '0.5rem' }}>👍</span>
-              <span style={{ fontSize: '2.2rem', color: '#ffb300', minWidth: 40, textAlign: 'center' }}>{q.likes}</span>
-            </span>
-          </li>
-        ))}
-      </ul>
+    <div style={{ background: '#d0d6f2', minHeight: '100vh', fontFamily: 'Inter, Arial, sans-serif', padding: 0, margin: 0 }}>
+      <div style={{ display: 'flex', alignItems: 'center', padding: '1.5rem 2rem 0.5rem 2rem', justifyContent: 'space-between' }}>
+        <div style={{ fontWeight: 600, fontSize: 22, color: '#444', display: 'flex', alignItems: 'center' }}>
+        </div>
+      </div>
+      <div style={{ display: 'flex', gap: 32, alignItems: 'flex-start', padding: '2rem 2rem 0 2rem', maxWidth: 1400, margin: '0 auto' }}>
+        <div style={{ minWidth: 260, background: '#fff', borderRadius: 16, boxShadow: '0 2px 16px #0001', padding: 24, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <QRCodeSVG value={appUrl} size={180} />
+          <div style={{ marginTop: 24, textAlign: 'center' }}>
+            <div style={{ color: '#888', fontSize: 22, marginBottom: 8 }}>Pripojte sa</div>
+          </div>
+        </div>
+        <div style={{ flex: 1 }}>
+          <ul ref={listRef} style={{ listStyle: 'none', padding: 0, margin: 0, width: '100%' }}>
+            {questions.map(q => (
+              <li
+                key={q.id}
+                data-id={q.id}
+                style={{
+                  background: '#fff',
+                  borderRadius: 12,
+                  boxShadow: '0 2px 12px #0001',
+                  marginBottom: 24,
+                  padding: '1.5rem 2rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                  
+                  <div>
+                    
+                    <div style={{ fontSize: 32, color: '#222', fontWeight: 500 }}>{q.text}</div>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontWeight: 600, color: '#888', fontSize: 22 }}>
+                  <span>{q.likes}</span>
+                  <span role="img" aria-label="like">👍</span>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
     </div>
   );
 }
