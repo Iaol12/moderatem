@@ -181,7 +181,7 @@ export default function Submit() {
           position: 'fixed',
           left: 0,
           right: 0,
-          bottom: '0vh', // 10% of viewport height from bottom
+          bottom: '10vh', // 10% of viewport height from bottom
           margin: '0 auto',
         }}
       >
