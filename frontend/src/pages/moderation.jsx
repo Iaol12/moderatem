@@ -70,7 +70,25 @@ export default function Moderation() {
       {/* Approved Questions */}
       <div style={{ flex: 1, padding: '2rem', overflowY: 'auto', backgroundColor: '#a2e0a6', position: 'relative' }}>
         
-        <h2>Schválené otázky</h2>
+        <h2 style={{ display: 'flex', alignItems: 'center', gap: '1rem', justifyContent: 'space-between' }}>
+          <span>Schválené otázky</span>
+          <button
+            onClick={() => window.open('/display', '_blank')}
+            style={{
+              display: 'flex', alignItems: 'center', fontSize: '0.85rem', padding: '0.3rem 0.7rem',
+              background: '#f5f5f5', color: '#555', border: '1px solid #888', borderRadius: '4px',
+              marginLeft: 'auto', cursor: 'pointer', gap: '0.5rem', boxShadow: 'none',
+            }}
+          >
+            <svg width="18" height="18" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ display: 'inline', verticalAlign: 'middle' }}>
+              <rect x="2" y="6" width="16" height="7" rx="2" fill="#888"/>
+              <rect x="5.5" y="14" width="2" height="2.5" rx="1" fill="#888"/>
+              <rect x="12.5" y="14" width="2" height="2.5" rx="1" fill="#888"/>
+              <circle cx="16" cy="9.5" r="1.2" fill="#bbb"/>
+            </svg>
+            Zobraziť náhľad na projektor
+          </button>
+        </h2>
         {approved.map(q => (
           <div key={q.id} style={{ marginBottom: '1rem', background: '#fff', padding: '1rem', borderRadius: '6px', boxShadow: '0 1px 4px #eee', display: 'flex', flexDirection: 'column' }}>
             <span>{q.text} <span style={{ color: '#888' }}>({q.likes} likes)</span></span>

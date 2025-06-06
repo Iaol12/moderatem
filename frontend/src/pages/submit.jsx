@@ -1,8 +1,18 @@
 import { useState } from 'react';
 import useWebSocket from '../hooks/useWebSocket';
 
+// Helper to merge server questions and pending questions
+function mergeQuestions(serverQuestions, localQuestions) {
+  // Remove pending questions that are now approved (by text)
+  const approvedTexts = serverQuestions.map(q => q.text);
+  const pending = localQuestions.filter(q => q.pending && !approvedTexts.includes(q.text));
+  // Merge, server questions first, then pending
+  return [...serverQuestions, ...pending];
+}
+
 export default function Submit() {
   const [questions, setQuestions] = useState([]);
+  const [localPending, setLocalPending] = useState([]); // for temp questions
   const [text, setText] = useState('');
 
   // Store the initial order of questions by id
@@ -10,35 +20,25 @@ export default function Submit() {
 
   const send = useWebSocket((msg) => {
     if (msg.type === 'approved') {
-      setQuestions(prevQuestions => {
-        // Remove any pending question with the same text as an approved one
-        const approvedTexts = msg.data.map(q => q.text);
-        return msg.data.concat(
-          prevQuestions.filter(q => q.pending && !approvedTexts.includes(q.text))
-        );
-      });
-      // If order is empty or a new question is present, update order
+      setQuestions(prevQuestions => mergeQuestions(msg.data, localPending));
       setOrder(prevOrder => {
         const newIds = msg.data.map(q => q.id);
-        // Remove pending ids that have been approved (by matching text)
         const approvedTexts = msg.data.map(q => q.text);
+        // Remove pending ids that have been approved (by matching text)
         const filteredOrder = prevOrder.filter(id => {
-          const q = questions.find(q => q.id === id);
+          const q = questions.find(q => q.id === id) || localPending.find(q => q.id === id);
           return !q || !q.pending || !approvedTexts.includes(q.text);
         });
-        // If a new question is present (not in prevOrder), add it to the end
-        if (filteredOrder.length === 0 || newIds.some(id => !filteredOrder.includes(id))) {
-          return [...filteredOrder, ...newIds.filter(id => !filteredOrder.includes(id))];
-        }
-        // If a question was deleted, remove it from order
-        return filteredOrder.filter(id => newIds.includes(id));
+        // Add new ids from server
+        return [...filteredOrder, ...newIds.filter(id => !filteredOrder.includes(id))];
       });
+      // Remove approved from localPending
+      setLocalPending(pending => pending.filter(q => !msg.data.some(sq => sq.text === q.text)));
     }
   }, 'submit');
 
   const handleSubmit = () => {
     if (text.trim()) {
-      // Create a temporary question object
       const tempId = 'pending-' + Date.now();
       const newQuestion = {
         id: tempId,
@@ -46,6 +46,7 @@ export default function Submit() {
         likes: 0,
         pending: true,
       };
+      setLocalPending(qs => [...qs, newQuestion]);
       setQuestions(qs => [...qs, newQuestion]);
       setOrder(ord => [...ord, tempId]);
       send('submit-question', { text });
@@ -79,7 +80,6 @@ export default function Submit() {
         width: '100%',
         maxWidth: 520,
         margin: '0 auto',
-        padding: '2.5rem 0.5rem',
         minHeight: '100vh',
         background: 'linear-gradient(135deg, #181a1b 0%, #23272a 100%)',
         fontFamily: 'Inter, Fira Mono, Arial, sans-serif',
@@ -87,6 +87,9 @@ export default function Submit() {
         display: 'flex',
         flexDirection: 'column',
         boxShadow: '0 0 32px #0008',
+        position: 'relative',
+        padding: 0,
+        alignItems: 'center', // center children horizontally
       }}
     >
       <h1
@@ -108,12 +111,13 @@ export default function Submit() {
           padding: 0,
           margin: 0,
           flex: 1,
-          maxHeight: '55vh',
+          width: '100%', // stretch to container
           overflowY: 'auto',
           background: 'rgba(30,32,34,0.95)',
           borderRadius: '12px',
           boxShadow: '0 2px 16px #0004',
           border: '1px solid #23272a',
+          minHeight: 0,
         }}
       >
         {orderedQuestions.map(q => (
@@ -187,18 +191,21 @@ export default function Submit() {
           </li>
         )}
       </ul>
-      <div style={{ flexGrow: 1 }} />
       <div
         style={{
+          width: '100%',
+          maxWidth: 520,
           display: 'flex',
           flexDirection: 'row',
           gap: '0.5rem',
-          marginTop: '2rem',
           background: 'rgba(30,32,34,0.95)',
           borderRadius: 10,
           boxShadow: '0 2px 12px #0004',
           padding: '1.1rem 1rem',
           border: '1px solid #23272a',
+          zIndex: 10,
+          marginTop: 'auto', // push to bottom
+          alignSelf: 'center', // center horizontally
         }}
       >
         <input
@@ -247,22 +254,27 @@ export default function Submit() {
         @media (max-width: 600px) {
           div[style*='max-width: 520px'] {
             max-width: 100vw !important;
-            padding: 1.2rem 0.2rem !important;
+            padding: 0 !important;
             box-shadow: none !important;
           }
-          ul[style*='max-height: 55vh'] {
-            max-height: 40vh !important;
+          ul[style*='border-radius: 12px'] {
             border-radius: 8px !important;
             font-size: 0.98rem !important;
+            max-height: none !important;
           }
           h1 {
             font-size: 1.3rem !important;
             margin-bottom: 1rem !important;
           }
-          div[style*='flex-direction: row'] {
+          div[style*='flex-direction: row'][style*='border-radius: 10px'] {
             flex-direction: column !important;
             gap: 0.7rem !important;
             padding: 0.7rem 0.5rem !important;
+            border-radius: 0 !important;
+            width: 100vw !important;
+            max-width: 100vw !important;
+            left: 0 !important;
+            position: static !important;
           }
           input[placeholder='Vaša otázka...'] {
             font-size: 1rem !important;
