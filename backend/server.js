@@ -70,6 +70,19 @@ wss.on("connection", (ws) => {
             updateClients();
           }
           break;
+        case "unlike-question":
+          if (meta.screenType === "submit") {
+            // Implement unlike logic
+            if (typeof data.id !== 'undefined') {
+              const questions = getQuestions({ status: 'approved' });
+              const q = questions.find(q => q.id === data.id);
+              if (q && q.likes > 0) {
+                q.likes -= 1;
+                updateClients();
+              }
+            }
+          }
+          break;
 
         case "approve-question":
           if (meta.isModerator) {
