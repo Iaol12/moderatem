@@ -1,26 +1,30 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import useWebSocket from '../hooks/useWebSocket';
 
 export default function Moderation() {
+  const [searchParams] = useSearchParams();
+  const sessionId = searchParams.get('session');
   const [approved, setApproved] = useState([]);
   const [pending, setPending] = useState([]);
   const [token, setToken] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [autoApprove, setAutoApprove] = useState(false);
 
+  // Wrap send to always include sessionId
   const send = useWebSocket((msg) => {
     if (msg.type === 'moderation') {
       setApproved(msg.data.approved);
       setPending(msg.data.pending);
     }
-  }, 'moderation', submitted ? token : null);
+  }, 'moderation', submitted ? token : null, sessionId);
 
   // Auto-approve effect
   useEffect(() => {
     if (autoApprove && pending.length > 0) {
-      pending.forEach(q => send('approve-question', { id: q.id }));
+      pending.forEach(q => send('approve-question', { id: q.id, session_id: sessionId }));
     }
-  }, [autoApprove, pending]);
+  }, [autoApprove, pending, sessionId]);
 
   if (!submitted) {
     return (

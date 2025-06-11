@@ -1,10 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import useWebSocket from '../hooks/useWebSocket';
 import { QRCodeSVG } from 'qrcode.react';
 
 
 export default function Display() {
-
+  const [searchParams] = useSearchParams();
+  const sessionId = searchParams.get('session');
   const backgroundColor = '#d0d6f2'; // Light blue background
   
   const [questions, setQuestions] = useState([]);
@@ -18,7 +20,7 @@ export default function Display() {
       setPrevOrder(questions.map(q => q.id));
       setQuestions(sorted);
     }
-  }, 'display');
+  }, 'display', null, sessionId);
 
   // Animation effect for reordering
   useEffect(() => {
@@ -40,7 +42,7 @@ export default function Display() {
   }, [questions, prevOrder]);
 
   // Get the current origin (protocol + host)
-  const appUrl = window.location.origin + '/submit';
+  const appUrl = window.location.origin + '/submit?session=' + encodeURIComponent(sessionId || '');
 
   return (
     <div style={{ background: backgroundColor, minHeight: '100vh', fontFamily: 'Inter, Arial, sans-serif', padding: 0, margin: 0 }}>

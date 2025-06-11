@@ -5,6 +5,8 @@ import ModerationPage from './pages/moderation';
 import DisplayPage from './pages/display';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
+import SessionsPage from './pages/sessions';
+
 
 function App() {
   // Get the current origin (protocol + host)
@@ -17,15 +19,7 @@ function App() {
         <Route path="/display" element={<DisplayPage />} />
         <Route
           path="*"
-          element={
-            <div className="App">
-              <header className="App-header">
-                <div style={{ marginTop: 32 }}>
-                  <QRCodeSVG value={appUrl} size={600} />
-                </div>
-              </header>
-            </div>
-          }
+          element={<SessionsPage />}
         />
       </Routes>
     </Router>

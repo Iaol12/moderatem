@@ -1,23 +1,27 @@
 import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import useWebSocket from '../hooks/useWebSocket';
 
 export default function Submit() {
+  const [searchParams] = useSearchParams();
+  const sessionId = searchParams.get('session');
   const [questions, setQuestions] = useState([]);
   const [text, setText] = useState('');
 
   // Store the initial order of questions by id
   const [order, setOrder] = useState([]);
 
+  // Always send session_id with every message
   const send = useWebSocket((msg) => {
     if (msg.type === 'approved') {
       setQuestions(msg.data);
       setOrder(msg.data.map(q => q.id));
     }
-  }, 'submit');
+  }, 'submit', null, sessionId);
 
   const handleSubmit = () => {
     if (text.trim()) {
-      send('submit-question', { text });
+      send('submit-question', { text, session_id: sessionId });
     }
     setText('');
   };
@@ -27,10 +31,10 @@ export default function Submit() {
 
   const handleLike = (id) => {
     if (!liked[id]) {
-      send('like-question', { id });
+      send('like-question', { id, session_id: sessionId });
       setLiked(l => ({ ...l, [id]: true }));
     } else {
-      send('unlike-question', { id });
+      send('unlike-question', { id, session_id: sessionId });
       setLiked(l => {
         const newLiked = { ...l };
         delete newLiked[id];

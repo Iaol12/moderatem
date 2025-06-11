@@ -7,7 +7,10 @@ const {
   getQuestions,
   likeQuestion,
   approveQuestion,
-  deleteQuestion
+  deleteQuestion,
+  getAllSessions,
+  createSession,
+  createSessionId
 } = require("./questions");
 const { authenticate } = require("./auth");
 
@@ -40,7 +43,7 @@ function updateClients() {
 
 wss.on("connection", (ws) => {
   console.log("[WebSocket] New connection");
-  clients.set(ws, { screenType: null, isModerator: false });
+  clients.set(ws, { screenType: null, isModerator: false, session_id: null });
 
   ws.on("message", (msg) => {
     try {
@@ -51,6 +54,7 @@ wss.on("connection", (ws) => {
       switch (type) {
         case "register-screen":
           meta.screenType = data.screen;
+          meta.session_id = data.session_id || null; // Store session_id if provided
           if (data.token && authenticate(data.token)) {
             meta.isModerator = true;
           }
@@ -114,6 +118,23 @@ wss.on("connection", (ws) => {
   ws.on("error", (err) => {
     console.error("[WebSocket] Error:", err);
   });
+});
+
+app.use(express.json());
+
+app.post('/sessions', (req, res) => {
+  const { sessionName } = req.body;
+  if (!sessionName) {
+    return res.status(400).json({ error: "Session name is required" });
+  }
+  const sessionId = createSessionId();
+  createSession(sessionId, sessionName);
+  res.json({ id: sessionId, name: sessionName });
+});
+
+app.get('/sessions', (req, res) => {
+  const sessions = getAllSessions();
+  res.json(sessions);
 });
 
 // Serve static files from React build
