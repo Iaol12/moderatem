@@ -77,7 +77,7 @@ export default function Moderation() {
         <h2 style={{ display: 'flex', alignItems: 'center', gap: '1rem', justifyContent: 'space-between' }}>
           <span>Schválené otázky</span>
           <button
-            onClick={() => window.open('/display', '_blank')}
+            onClick={() => window.open(`/display?session=${encodeURIComponent(sessionId || '')}`, '_blank')}
             style={{
               display: 'flex', alignItems: 'center', fontSize: '0.85rem', padding: '0.3rem 0.7rem',
               background: '#f5f5f5', color: '#555', border: '1px solid #888', borderRadius: '4px',
