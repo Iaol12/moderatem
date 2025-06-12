@@ -1,14 +1,15 @@
 import { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate, useLocation } from 'react-router-dom';
 import useWebSocket from '../hooks/useWebSocket';
 
 export default function Moderation() {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const location = useLocation();
   const sessionId = searchParams.get('session');
+  const token = location.state?.token || '';
   const [approved, setApproved] = useState([]);
   const [pending, setPending] = useState([]);
-  const [token, setToken] = useState("");
-  const [submitted, setSubmitted] = useState(false);
   const [autoApprove, setAutoApprove] = useState(false);
 
   // Wrap send to always include sessionId
@@ -17,7 +18,7 @@ export default function Moderation() {
       setApproved(msg.data.approved);
       setPending(msg.data.pending);
     }
-  }, 'moderation', submitted ? token : null, sessionId);
+  }, 'moderation', token, sessionId);
 
   // Auto-approve effect
   useEffect(() => {
@@ -26,27 +27,34 @@ export default function Moderation() {
     }
   }, [autoApprove, pending, sessionId]);
 
-  if (!submitted) {
-    return (
-      <div style={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center', background: '#f5f5f5' }}>
-        <form onSubmit={e => { e.preventDefault(); setSubmitted(true); }} style={{ background: '#fff', padding: '2rem', borderRadius: '8px', boxShadow: '0 2px 8px #ccc', minWidth: 320 }}>
-          <h2>Zadajte moderátorský kľúč</h2>
-          <input
-            type="password"
-            value={token}
-            onChange={e => setToken(e.target.value)}
-            placeholder="Moderátorský kľúč"
-            style={{ width: '100%', padding: '0.5rem', fontSize: '1rem', marginBottom: '1rem', borderRadius: '4px', border: '1px solid #ccc' }}
-            autoFocus
-          />
-          <button type="submit" style={{ width: '100%', padding: '0.5rem', fontSize: '1rem', borderRadius: '4px', background: '#4caf50', color: '#fff', border: 'none' }}>Prihlásiť sa</button>
-        </form>
-      </div>
-    );
-  }
+  // Back button handler
+  const handleBack = () => {
+    navigate('/');
+  };
 
   return (
     <div style={{ display: 'flex', height: '100vh', alignItems: 'stretch' }}>
+      {/* Back button */}
+      <button
+        onClick={handleBack}
+        style={{
+          position: 'absolute',
+          top: 16,
+          left: 16,
+          zIndex: 10,
+          background: '#ffb300',
+          color: '#23272a',
+          border: 'none',
+          borderRadius: 6,
+          fontWeight: 700,
+          fontSize: '1rem',
+          padding: '0.5rem 1.2rem',
+          cursor: 'pointer',
+          boxShadow: '0 2px 8px #0004',
+        }}
+      >
+        ← Späť na relácie
+      </button>
       {/* Pending Questions */}
       <div style={{ flex: 1, padding: '2rem', overflowY: 'auto' }}>
       <div style={{top: '2rem', zIndex: 2 , display:"flex" ,justifyContent: 'space-between',alignItems: 'center',}}>

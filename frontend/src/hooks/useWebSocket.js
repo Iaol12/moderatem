@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 
-export default function useWebSocket(onMessage, screenType, token = null) {
+export default function useWebSocket(onMessage, screenType, token = null, sessionId ) {
   const socketRef = useRef(null);
 
   useEffect(() => {
@@ -12,7 +12,7 @@ export default function useWebSocket(onMessage, screenType, token = null) {
     ws.onopen = () => {
       ws.send(JSON.stringify({
         type: 'register-screen',
-        data: { screen: screenType, session_id:  token }
+        data: { screen: screenType, token:  token , session_id: sessionId }
       }));
     };
 

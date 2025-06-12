@@ -55,6 +55,7 @@ wss.on("connection", (ws) => {
 
   ws.on("message", (msg) => {
     try {
+      console.log("[WebSocket] Message received:", msg);
       const { type, data } = JSON.parse(msg);
       const meta = clients.get(ws);
       console.log(`[WebSocket] Message received: type=${type}`, data);

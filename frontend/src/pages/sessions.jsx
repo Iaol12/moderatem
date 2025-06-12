@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 export default function SessionsPage() {
   const [sessions, setSessions] = useState([]);
@@ -7,7 +7,10 @@ export default function SessionsPage() {
   const [newName, setNewName] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [adminToken, setAdminToken] = useState('');
+  const [tokenSubmitted, setTokenSubmitted] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Fetch sessions from backend
   useEffect(() => {
@@ -16,6 +19,14 @@ export default function SessionsPage() {
       .then(setSessions)
       .catch(() => setSessions([]));
   }, []);
+
+  // If coming back from moderation, preserve token
+  useEffect(() => {
+    if (location.state && location.state.token) {
+      setAdminToken(location.state.token);
+      setTokenSubmitted(true);
+    }
+  }, [location.state]);
 
   const handleCreate = async () => {
     if (!newName.trim()) {
@@ -43,8 +54,28 @@ export default function SessionsPage() {
   };
 
   const handleGoToModeration = (id) => {
-    navigate(`/moderation?session=${id}`);
+    navigate(`/moderation?session=${id}`, { state: { token: adminToken } });
   };
+
+  // Admin password form
+  if (!tokenSubmitted) {
+    return (
+      <div style={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center', background: '#f5f5f5' }}>
+        <form onSubmit={e => { e.preventDefault(); setTokenSubmitted(true); }} style={{ background: '#fff', padding: '2rem', borderRadius: '8px', boxShadow: '0 2px 8px #ccc', minWidth: 320 }}>
+          <h2>Zadajte moderátorský kľúč</h2>
+          <input
+            type="password"
+            value={adminToken}
+            onChange={e => setAdminToken(e.target.value)}
+            placeholder="Moderátorský kľúč"
+            style={{ width: '100%', padding: '0.5rem', fontSize: '1rem', marginBottom: '1rem', borderRadius: '4px', border: '1px solid #ccc' }}
+            autoFocus
+          />
+          <button type="submit" style={{ width: '100%', padding: '0.5rem', fontSize: '1rem', borderRadius: '4px', background: '#4caf50', color: '#fff', border: 'none' }}>Prihlásiť sa</button>
+        </form>
+      </div>
+    );
+  }
 
   return (
     <div style={{
