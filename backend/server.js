@@ -33,12 +33,20 @@ function broadcast(filterFn, type, data) {
   }
 }
 
-function updateClients() {
-  const approved = getQuestions({ status: 'approved' });
-  const pending = getQuestions({ status: 'pending' });
+function updateClients(sessionId) {
+  const approved = getQuestions({ status: 'approved' }, sessionId);
+  const pending = getQuestions({ status: 'pending' }, sessionId);
 
-  broadcast(meta => meta.screenType === 'submit' || meta.screenType === 'display', 'approved', approved);
-  broadcast(meta => meta.screenType === 'moderation', 'moderation', { approved, pending });
+  broadcast(
+    meta => meta.session_id === sessionId && (meta.screenType === 'submit' || meta.screenType === 'display'),
+    'approved',
+    approved
+  );
+  broadcast(
+    meta => meta.session_id === sessionId && meta.screenType === 'moderation',
+    'moderation',
+    { approved, pending }
+  );
 }
 
 wss.on("connection", (ws) => {
@@ -58,31 +66,31 @@ wss.on("connection", (ws) => {
           if (data.token && authenticate(data.token)) {
             meta.isModerator = true;
           }
-          updateClients();
+          updateClients(meta.sessionId);
           break;
 
         case "submit-question":
           if (meta.screenType === "submit" && typeof data.text === "string") {
-            addQuestion(data.text);
-            updateClients();
+            addQuestion(data.text, meta.session_id);
+            updateClients(meta.session_id);
           }
           break;
 
         case "like-question":
           if (meta.screenType === "submit") {
-            likeQuestion(data.id);
-            updateClients();
+            likeQuestion(data.id, meta.session_id);
+            updateClients(meta.session_id);
           }
           break;
         case "unlike-question":
           if (meta.screenType === "submit") {
             // Implement unlike logic
             if (typeof data.id !== 'undefined') {
-              const questions = getQuestions({ status: 'approved' });
+              const questions = getQuestions({ status: 'approved' }, meta.session_id);
               const q = questions.find(q => q.id === data.id);
               if (q && q.likes > 0) {
                 q.likes -= 1;
-                updateClients();
+                updateClients(meta.session_id);
               }
             }
           }
@@ -90,15 +98,15 @@ wss.on("connection", (ws) => {
 
         case "approve-question":
           if (meta.isModerator) {
-            approveQuestion(data.id);
-            updateClients();
+            approveQuestion(data.id, meta.session_id);
+            updateClients(meta.session_id);
           }
           break;
 
         case "delete-question":
           if (meta.isModerator) {
-            deleteQuestion(data.id);
-            updateClients();
+            deleteQuestion(data.id, meta.session_id);
+            updateClients(meta.session_id);
           }
           break;
 
