@@ -12,7 +12,7 @@ export default function useWebSocket(onMessage, screenType, token = null) {
     ws.onopen = () => {
       ws.send(JSON.stringify({
         type: 'register-screen',
-        data: { screen: screenType, token }
+        data: { screen: screenType, session_id:  token }
       }));
     };
 
