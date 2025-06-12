@@ -66,7 +66,7 @@ wss.on("connection", (ws) => {
           if (data.token && authenticate(data.token)) {
             meta.isModerator = true;
           }
-          updateClients(meta.sessionId);
+          updateClients(meta.session_id);
           break;
 
         case "submit-question":
