@@ -10,7 +10,7 @@ export default function Moderation() {
   const token = location.state?.token || '';
   const [approved, setApproved] = useState([]);
   const [pending, setPending] = useState([]);
-  const [autoApprove, setAutoApprove] = useState(false);
+  const [autoApprove, setAutoApprove] = useState(true);
 
   // Wrap send to always include sessionId
   const send = useWebSocket((msg) => {
@@ -29,7 +29,7 @@ export default function Moderation() {
 
   // Back button handler
   const handleBack = () => {
-    navigate('/');
+    navigate('/', { state: { token: token } });
   };
 
   return (
@@ -39,7 +39,7 @@ export default function Moderation() {
         onClick={handleBack}
         style={{
           position: 'absolute',
-          top: 16,
+          top: 0,
           left: 16,
           zIndex: 10,
           background: '#ffb300',
@@ -53,7 +53,7 @@ export default function Moderation() {
           boxShadow: '0 2px 8px #0004',
         }}
       >
-        ← Späť na relácie
+        ← Späť
       </button>
       {/* Pending Questions */}
       <div style={{ flex: 1, padding: '2rem', overflowY: 'auto' }}>

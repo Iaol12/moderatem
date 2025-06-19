@@ -19,11 +19,15 @@ export default function Submit() {
     }
   }, 'submit', null, sessionId);
 
+  const [sending, setSending] = useState(false);
+
   const handleSubmit = () => {
     if (text.trim()) {
+      setSending(true);
       send('submit-question', { text, session_id: sessionId });
+      setText('');
+      setTimeout(() => setSending(false), 1500);
     }
-    setText('');
   };
 
   // Track liked questions in local state (by id)
@@ -222,12 +226,14 @@ export default function Submit() {
             fontWeight: 700,
             letterSpacing: 0.5,
             boxShadow: '0 2px 8px #0004',
-            cursor: 'pointer',
+            cursor: sending ? 'not-allowed' : 'pointer',
             transition: 'background 0.2s',
             minWidth: 100,
+            opacity: sending ? 0.7 : 1,
           }}
+          disabled={sending || !text.trim()}
         >
-          Odoslať
+          {sending ? 'Odosiela sa...' : 'Odoslať'}
         </button>
       </div>
       {/* Responsive styles for mobile */}

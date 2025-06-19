@@ -10,10 +10,12 @@ const {
   deleteQuestion,
   getAllSessions,
   createSession,
-  createSessionId
+  createSessionId,
+  removeSession
 } = require("./questions");
 const { authenticate } = require("./auth");
 
+const staticPath = path.join(__dirname, './build');
 const port = process.env.PORT || 4000 
 const app = express();
 const server = http.createServer(app);
@@ -55,10 +57,8 @@ wss.on("connection", (ws) => {
 
   ws.on("message", (msg) => {
     try {
-      console.log("[WebSocket] Message received:", msg);
       const { type, data } = JSON.parse(msg);
       const meta = clients.get(ws);
-      console.log(`[WebSocket] Message received: type=${type}`, data);
 
       switch (type) {
         case "register-screen":
@@ -132,7 +132,10 @@ wss.on("connection", (ws) => {
 app.use(express.json());
 
 app.post('/sessions', (req, res) => {
-  const { sessionName } = req.body;
+  const { sessionName, token } = req.body;
+  if (token && !authenticate(token)) {
+    return res.status(403).json({ error: "Unauthorized" });
+  }
   if (!sessionName) {
     return res.status(400).json({ error: "Session name is required" });
   }
@@ -141,17 +144,39 @@ app.post('/sessions', (req, res) => {
   res.json({ id: sessionId, name: sessionName });
 });
 
+// Remove a session
+app.delete('/sessions/:id', (req, res) => {
+  const token = req.body.token;
+  if (token && !authenticate(token)) {
+    return res.status(403).json({ error: "Unauthorized" });
+  }
+  const sessionId = req.params.id;
+  removeSession(sessionId);
+  res.json({ success: true });
+});
+
+
 app.get('/sessions', (req, res) => {
   const sessions = getAllSessions();
   res.json(sessions);
 });
 
+
+app.post('/authentificate', (req, res) => {
+  const password = req.body.password;
+  if (password && authenticate(password)) {
+    res.json({ success: true });
+  } else {
+    res.status(403).json({ success: false, error: "Unauthorized" });
+  }
+});
+
 // Serve static files from React build
-app.use(express.static(path.join(__dirname, '../frontend/build')));
+app.use(express.static(staticPath));
 
 // Catch-all: serve index.html for React Router (avoid path-to-regexp error)
 app.use((req, res, next) => {
-  res.sendFile(path.join(__dirname, '../frontend/build', 'index.html'));
+  res.sendFile(path.join(staticPath, 'index.html'));
 });
 
 server.listen(port, () => {

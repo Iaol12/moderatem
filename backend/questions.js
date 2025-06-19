@@ -59,6 +59,11 @@ function getAllSessions() {
   }));
 }
 
+function removeSession(sessionId) {
+  delete questionsBySession[sessionId];
+  delete sessionNames[sessionId];
+}
+
 module.exports = {
   addQuestion,
   getQuestions,
@@ -67,5 +72,6 @@ module.exports = {
   deleteQuestion,
   createSessionId,
   createSession,
-  getAllSessions
+  getAllSessions,
+  removeSession
 };
